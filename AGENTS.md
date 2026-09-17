@@ -483,3 +483,31 @@ A task is complete when:
 - relevant limitations or warnings are reported
 
 Correctness and maintainability are more important than maximizing the amount of code changed.
+
+---
+
+## Task Requirements
+
+Treat the active task requirements as a contract for the duration of the task.
+
+Sources may include:
+
+- the original task or ticket
+- acceptance criteria
+- explicit user clarifications
+- explicitly approved requirement changes
+
+Do not infer requirements solely from the current implementation.
+
+Keep earlier requirements active unless the user explicitly changes or overrides them.
+
+If a new instruction appears to conflict with an existing requirement:
+
+- identify the conflict
+- explain the consequence
+- ask whether the existing requirement should be overridden
+- do not silently choose one interpretation
+
+A conflict may be indirect. Treat an instruction as conflicting when following it would make an existing acceptance criterion, security constraint, or explicitly agreed behavior no longer true.
+
+Before completing the task, verify the implementation against the current requirement set.

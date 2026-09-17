@@ -11,12 +11,59 @@ describe('UserService', () => {
   it('creates and retrieves a user by email', () => {
     const user = service.createUser('Ada', 'ada@example.com');
 
-    expect(user).toEqual({ name: 'Ada', email: 'ada@example.com' });
+    expect(user).toEqual({ name: 'Ada', email: 'ada@example.com', active: true });
     expect(service.getUserByEmail('ada@example.com')).toEqual(user);
   });
 
   it('returns undefined for an unknown email', () => {
     expect(service.getUserByEmail('unknown@example.com')).toBeUndefined();
+  });
+
+  it('deactivates by email regardless of case while keeping the user available', () => {
+    const original = service.createUser('John', 'John@Example.com');
+    const other = service.createUser('Ada', 'ada@example.com');
+
+    expect(service.deactivateUser('JOHN@example.COM')).toBe(true);
+    const inactive = service.getUserByEmail('john@example.com');
+    expect(inactive).toEqual({ name: 'John', email: 'John@Example.com', active: false });
+    expect(Object.isFrozen(inactive)).toBe(true);
+    expect(original.active).toBe(true);
+    expect(service.getUserByEmail('ada@example.com')).toEqual(other);
+  });
+
+  it('returns true without changing an already inactive user', () => {
+    service.createUser('Ada', 'ada@example.com');
+    service.deactivateUser('ada@example.com');
+    const inactive = service.getUserByEmail('ada@example.com');
+
+    expect(service.deactivateUser('ADA@example.com')).toBe(true);
+    expect(service.getUserByEmail('ada@example.com')).toEqual(inactive);
+    expect(inactive?.active).toBe(false);
+  });
+
+  it('returns false when deactivating an unknown user', () => {
+    expect(service.deactivateUser('unknown@example.com')).toBe(false);
+    expect(service.getUserByEmail('unknown@example.com')).toBeUndefined();
+  });
+
+  it('still rejects duplicate emails for inactive users', () => {
+    service.createUser('Ada', 'ada@example.com');
+    service.deactivateUser('ada@example.com');
+
+    expect(() => service.createUser('Other', 'ADA@example.com')).toThrow(
+      'A user with this email already exists',
+    );
+    expect(service.getUserByEmail('ada@example.com')?.active).toBe(false);
+  });
+
+  it('allows deleting an inactive user and recreating an active user', () => {
+    service.createUser('Ada', 'ada@example.com');
+    service.deactivateUser('ada@example.com');
+
+    expect(service.deleteUser('ADA@example.com')).toBe(true);
+    expect(service.getUserByEmail('ada@example.com')).toBeUndefined();
+    expect(service.deactivateUser('ada@example.com')).toBe(false);
+    expect(service.createUser('Ada', 'ada@example.com').active).toBe(true);
   });
 
   it.each([

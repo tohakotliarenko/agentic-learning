@@ -1,7 +1,7 @@
-import { Agent, run } from '@openai/agents';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { createProjectCheckTool, projectCommands } from './project-check-tool.js';
+import { projectCommands } from './project-check-tool.js';
+import { createProjectAgent, runProjectAgent } from './project-agent-factory.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -23,28 +23,10 @@ async function realExecutor(command: string): Promise<string> {
   return [stdout, stderr].filter(Boolean).join('\n').trim();
 }
 
-const runProjectCheck = createProjectCheckTool(realExecutor);
-
-const agent = new Agent({
-  name: 'Project Verification Agent',
-
-  model: 'gpt-5.6-luna',
-
-  instructions: `
-You inspect the health of the current TypeScript project.
-
-Use the available tool when you need real verification.
-Do not claim that tests, lint, typecheck, or git state are clean unless you
-actually ran the corresponding tool.
-
-You only have access to the approved project checks exposed through your tools.
-`,
-
-  tools: [runProjectCheck],
-});
+const agent = createProjectAgent(realExecutor);
 
 async function main() {
-  const result = await run(
+  const result = await runProjectAgent(
     agent,
     'Check whether this project is currently healthy. Run the relevant checks and summarize the result.',
   );

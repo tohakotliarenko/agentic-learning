@@ -3,7 +3,6 @@ export interface ImplementationContext {
   readonly hasCurrentRequirements: boolean;
   readonly ambiguitiesResolved: boolean;
   readonly hasImplementationPlan: boolean;
-  readonly planExplicitlyApproved: boolean;
 }
 
 export type ImplementationPrerequisite = keyof ImplementationContext;
@@ -17,7 +16,6 @@ const prerequisites: readonly ImplementationPrerequisite[] = [
   'hasCurrentRequirements',
   'ambiguitiesResolved',
   'hasImplementationPlan',
-  'planExplicitlyApproved',
 ];
 
 // Evaluates caller-supplied facts without verifying, inferring, or creating state.

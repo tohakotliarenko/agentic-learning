@@ -2,6 +2,7 @@ import { Agent, Runner } from '@openai/agents';
 import { ScriptedModel, assistantMessage, functionCall } from '@openai/agents/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { createProjectCheckTool } from '../src/project-check-tool.js';
+import { createVerificationState } from '../src/verification-policy.js';
 
 async function callProjectTool(input: Record<string, unknown>, executor: (command: string) => Promise<string>) {
   const model = new ScriptedModel([
@@ -13,7 +14,7 @@ async function callProjectTool(input: Record<string, unknown>, executor: (comman
     model,
     tools: [createProjectCheckTool(executor)],
   });
-  const result = await new Runner({ tracingDisabled: true }).run(agent, 'Run a project check.');
+  const result = await new Runner({ tracingDisabled: true }).run(agent, 'Run a project check.', { context: createVerificationState() });
   model.assertComplete();
   return {
     outputs: result.newItems.filter((item) => item.type === 'tool_call_output_item'),

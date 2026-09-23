@@ -9,7 +9,6 @@ const context: ImplementationContext = {
   hasCurrentRequirements: true,
   ambiguitiesResolved: true,
   hasImplementationPlan: true,
-  planExplicitlyApproved: true,
 };
 
 afterEach(() => {
@@ -25,12 +24,12 @@ describe('executeImplementationCommand', () => {
       const executor = vi.fn(() => { throw new Error('Must not execute'); });
 
       await expect(executeImplementationCommand(
-        { ...context, hasActiveTask: false, planExplicitlyApproved: false },
+        { ...context, hasActiveTask: false, hasCurrentRequirements: false },
         command,
         executor,
       )).resolves.toEqual({
         status: 'workflow-blocked',
-        missingPrerequisites: ['hasActiveTask', 'planExplicitlyApproved'],
+        missingPrerequisites: ['hasActiveTask', 'hasCurrentRequirements'],
       });
 
       expect(executionSpy).not.toHaveBeenCalled();

@@ -11,6 +11,7 @@ export function createImplementationTool<T>(
     name: 'implement_task',
     description: 'Execute an implementation request when workflow prerequisites allow it.',
     parameters: z.strictObject({ task: z.string().min(1) }),
+    needsApproval: true,
     inputGuardrails: [createImplementationInputGuardrail(context)],
     execute: async ({ task }) => executor(task),
   });

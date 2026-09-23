@@ -10,7 +10,6 @@ const completeContext: ImplementationContext = {
   hasCurrentRequirements: true,
   ambiguitiesResolved: true,
   hasImplementationPlan: true,
-  planExplicitlyApproved: true,
 };
 
 describe('checkImplementationContext', () => {
@@ -19,11 +18,10 @@ describe('checkImplementationContext', () => {
     { name: 'active task missing', missing: ['hasActiveTask'] },
     { name: 'current requirements missing', missing: ['hasCurrentRequirements'] },
     { name: 'ambiguities unresolved', missing: ['ambiguitiesResolved'] },
-    { name: 'plan absent despite approval', missing: ['hasImplementationPlan'] },
-    { name: 'explicit approval missing', missing: ['planExplicitlyApproved'] },
+    { name: 'implementation plan missing', missing: ['hasImplementationPlan'] },
     {
       name: 'several prerequisites missing',
-      missing: ['hasActiveTask', 'ambiguitiesResolved', 'planExplicitlyApproved'],
+      missing: ['hasActiveTask', 'ambiguitiesResolved'],
     },
     {
       name: 'all prerequisites missing',
@@ -32,7 +30,6 @@ describe('checkImplementationContext', () => {
         'hasCurrentRequirements',
         'ambiguitiesResolved',
         'hasImplementationPlan',
-        'planExplicitlyApproved',
       ],
     },
   ];
@@ -52,7 +49,6 @@ describe('checkImplementationContext', () => {
 
   it('reports missing prerequisites in fixed order regardless of property order', () => {
     const context: ImplementationContext = {
-      planExplicitlyApproved: false,
       hasImplementationPlan: false,
       ambiguitiesResolved: true,
       hasCurrentRequirements: true,
@@ -61,12 +57,12 @@ describe('checkImplementationContext', () => {
 
     expect(checkImplementationContext(context)).toEqual({
       allowed: false,
-      missingPrerequisites: ['hasActiveTask', 'hasImplementationPlan', 'planExplicitlyApproved'],
+      missingPrerequisites: ['hasActiveTask', 'hasImplementationPlan'],
     });
   });
 
-  it.each([true, false])('does not mutate input when approval is %j', (approval) => {
-    const context = Object.freeze({ ...completeContext, planExplicitlyApproved: approval });
+  it.each([true, false])('does not mutate input when plan availability is %j', (hasImplementationPlan) => {
+    const context = Object.freeze({ ...completeContext, hasImplementationPlan });
     const before = { ...context };
 
     const first = checkImplementationContext(context);

@@ -67,12 +67,13 @@ and is not a security boundary. Tests use callbacks without running shell comman
 
 `src/workflow-policy.ts` exports the pure `checkImplementationContext(context)`
 function, independent of command policy and execution. Its `ImplementationContext`
-requires five caller-supplied booleans: `hasActiveTask`, `hasCurrentRequirements`,
-`ambiguitiesResolved`, `hasImplementationPlan`, and `planExplicitlyApproved`.
+requires four caller-supplied booleans: `hasActiveTask`, `hasCurrentRequirements`,
+`ambiguitiesResolved`, and `hasImplementationPlan`.
 
 When all are true, it returns `{ allowed: true }`. Otherwise, it returns
 `{ allowed: false, missingPrerequisites }`, listing every false field in the order
-above. Approval does not imply a plan exists. The function does not mutate input,
+above. Human approval is handled separately by the SDK tool approval mechanism.
+The function does not mutate input,
 infer or create missing state, or verify that the supplied facts are true.
 Table-driven tests live in `tests/workflow-policy.test.ts`.
 
@@ -121,3 +122,8 @@ Schema validation checks input shape only. The SDK may invoke input guardrails
 even for invalid input, but invalid input never reaches the executor. This demo
 adds no shell runner or extra validation layer. Scripted agent tests in
 `tests/implementation-tool.test.ts` disable tracing and use injected callbacks.
+
+The implementation tool retains `needsApproval: true`: a valid request pauses for
+human approval before execution. Approving and resuming permits the input guardrail
+and executor path; rejecting and resuming leaves the executor uncalled. Workflow
+readiness has no approval flag and does not replace this approval step.

@@ -40,6 +40,7 @@ describe('project agent action tool', () => {
 
   it.each([
     { action: 'deploy' },
+    { action: 'implement', task: 'Not configured for this agent' },
     { action: 'rm -rf tmp' },
     { command: 'rm -rf tmp' },
     { command: 'npm test' },

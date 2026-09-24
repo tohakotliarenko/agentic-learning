@@ -1,11 +1,12 @@
 import { Agent, Runner, type Model } from '@openai/agents';
-import { createProjectCheckTool } from './project-check-tool.js';
+import { createProjectCheckTool, type ImplementationCapability } from './project-check-tool.js';
 import { createVerificationState, type VerificationState } from './verification-policy.js';
 import { projectFinalOutput, verificationOutputGuardrail } from './verification-output-guardrail.js';
 
-export function createProjectAgent<T>(
+export function createProjectAgent<T, U = never>(
   executor: (command: string) => Promise<T> | T,
   model: string | Model = 'gpt-5.6-luna',
+  implementation?: ImplementationCapability<U>,
 ) {
   return new Agent<VerificationState, typeof projectFinalOutput>({
     name: 'Project Verification Agent',
@@ -15,7 +16,7 @@ Use the available tool for real verification. Report a verification field as tru
 only when the latest execution of that check passed in this run. Report false
 for checks that were not run or failed. Do not claim git state is clean without
 running the relevant tool. Return the required structured final output.`,
-    tools: [createProjectCheckTool(executor)],
+    tools: [createProjectCheckTool(executor, implementation)],
     outputType: projectFinalOutput,
     outputGuardrails: [verificationOutputGuardrail],
   });

@@ -110,20 +110,25 @@ guardrail evaluates it. This exercise policy does not recursively scan objects
 or detect every kind of secret. Agent-level tests use synthetic values and inspect
 the next scripted model request with tracing disabled.
 
-`src/implementation-tool.ts` exports `createImplementationTool(context, executor)`.
-Its `implement_task` function tool accepts only `{ task: string }` with a non-empty
-string, passed unchanged to the injected executor. The native input guardrail in
-`src/implementation-input-guardrail.ts` calls `checkImplementationContext(context)`
-on each invocation. A blocked workflow uses SDK `rejectContent` with the complete
-missing-prerequisite list returned by the policy; it does not execute the request
-or invent or change workflow state. An allowed workflow runs the executor once.
+`createProjectCheckTool(checkExecutor, { context, executor: implementationExecutor })`
+enables an additional `implement` capability on the same `run_project_check` tool.
+Checks accept only `{ action }`; implementation requires
+`{ action: 'implement', task: 'non-empty request' }`. Task text is passed unchanged
+to the separate implementation executor, never interpreted as a shell command.
+The verification-only CLI does not configure this capability. Applications can
+supply it as the third argument to `createProjectAgent`.
 
-Schema validation checks input shape only. The SDK may invoke input guardrails
-even for invalid input, but invalid input never reaches the executor. This demo
-adds no shell runner or extra validation layer. Scripted agent tests in
-`tests/implementation-tool.test.ts` disable tracing and use injected callbacks.
+Approval is conditional on parsed arguments: `action === 'implement'` pauses for
+human approval; checks execute without an interruption. After approval and resume,
+the implementation-only input guardrail delegates to `checkImplementationContext`.
+Human approval does not override missing workflow prerequisites. Those prerequisites
+do not block ordinary checks. Rejecting and resuming never invokes either executor
+for that implementation request. Implementation does not update verification flags.
+The native sensitive-output guardrail also covers implementation output.
 
-The implementation tool retains `needsApproval: true`: a valid request pauses for
-human approval before execution. Approving and resuming permits the input guardrail
-and executor path; rejecting and resuming leaves the executor uncalled. Workflow
-readiness has no approval flag and does not replace this approval step.
+The former standalone `createImplementationTool` has been replaced by this shared
+factory. Schema validation still rejects unsupported actions, raw commands, extra
+fields, missing or empty implementation tasks, and task fields on checks. The SDK
+may invoke input guardrails even for invalid input, but execution remains blocked.
+Tests in `tests/implementation-tool.test.ts` cover both capability paths with
+tracing disabled, scripted models, and injected callbacks only.

@@ -123,3 +123,64 @@ does not require live API calls or real shell side effects.
 
 After changes run npm test, npm run lint, and npm run typecheck. Review imports to
 ensure core modules have no SDK/process dependencies and adapters remain decoupled.
+
+## Durable human approval
+
+The optional durable entry point is
+`src/agent/composition/durable-project-agent.ts`. It accepts a configurable
+snapshot directory and a configured project agent:
+
+```ts
+const runtime = createDurableProjectAgent(directory, agent);
+const result = await runtime.start(input);
+// When result.status === 'waiting_for_approval', retain runId and pending callId.
+
+// In a later process, recreate the agent, executors, and runtime:
+const resumed = await newRuntime.resume(runId, callId, { type: 'approve' });
+// Or: { type: 'reject', message: 'Implementation was rejected by the user' }
+```
+
+Lifecycle:
+
+```text
+running -> waiting_for_approval -> persisted -> restored
+        -> approved/rejected -> running -> completed
+```
+
+A later interruption updates the snapshot under the same runId. The start/resume
+operation returns waiting_for_approval only after saving has completed. Successful
+completion removes the snapshot. Missing runs, invalid snapshots, and unknown
+pending call IDs fail explicitly; they never silently start a new run.
+
+- **Durable application state:** a versioned envelope in domain/persisted-agent-run
+  containing the stable runId, waiting status, and an opaque serializedState string.
+  ports/agent-run-store exposes save/load/delete without SDK types.
+- **OpenAI SDK state:** adapters/openai/agents/durable-agent-run uses
+  RunState.toString() and RunState.fromString(agent, serializedState).
+  History, approvals, and local verification context are restored by the SDK.
+  Approval/rejection uses the actual item returned by restored.getInterruptions().
+  Resume calls Runner.run with that state, without resetting verification.
+- **Persistence adapter:** FileAgentRunStore validates the envelope and reads/writes
+  JSON in the configured directory. It writes a private temporary file and renames
+  it over the previous snapshot. The OpenAI adapter leaves SDK payload validation
+  and schema-version compatibility to the SDK.
+
+Each process must recreate the compatible agent/tool configuration, implementation
+workflow context, and executor callbacks. These executable dependencies are not
+serialized. Existing approval and workflow policies still apply after restore.
+The existing verification-only CLI remains unchanged.
+
+Snapshots can contain run inputs, tool history, and context: use a private directory
+outside source control. The SDK's default serialization omits tracing API keys;
+tracing remains disabled by the durable runner.
+
+This is restart persistence, not exactly-once execution or power-loss recovery.
+There are no retries, locks, concurrent-approval coordination, or idempotency
+guarantees. A crash after a side effect but before the next save/cleanup can leave
+an older snapshot. SDK-version migrations are not implemented.
+
+Offline integration tests discard the initial runtime and retain only run/call
+identifiers, then create a fresh store, agent, Runner, and ScriptedModel. Both
+approve and reject paths read from temporary disk storage. Tests also verify
+preserved verification state, another interruption under the same runId, and
+malformed-state failures.

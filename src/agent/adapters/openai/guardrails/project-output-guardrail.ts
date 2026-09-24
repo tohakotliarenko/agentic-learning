@@ -3,7 +3,7 @@ import {
   ToolGuardrailFunctionOutputFactory,
 } from '@openai/agents';
 
-// Exercise-only substring policy: case-sensitive, with no recursive object scan.
+import { hasSensitiveOutput } from '../../../policies/project-output-policy.js';
 export const projectOutputGuardrail = defineToolOutputGuardrail({
   name: 'project_sensitive_output',
   run: async ({ output }) => {
@@ -13,8 +13,7 @@ export const projectOutputGuardrail = defineToolOutputGuardrail({
         ? output.result
         : output;
 
-    if (typeof content === 'string' &&
-      (content.includes('sk-') || content.includes('OPENAI_API_KEY='))) {
+    if (hasSensitiveOutput(content)) {
       return ToolGuardrailFunctionOutputFactory.rejectContent(
         'Tool output rejected: sensitive content detected.',
       );

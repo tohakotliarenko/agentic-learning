@@ -1,10 +1,12 @@
 import { Agent, Runner, type Model } from '@openai/agents';
-import { createProjectCheckTool, type ImplementationCapability } from './project-check-tool.js';
-import { createVerificationState, type VerificationState } from './verification-policy.js';
-import { projectFinalOutput, verificationOutputGuardrail } from './verification-output-guardrail.js';
+import { createProjectCheckTool } from '../tools/project-check-tool.js';
+import type { ProjectCheckExecutor, ImplementationCapability } from '../../../ports/executors.js';
+import { createVerificationState, type VerificationState } from '../../../domain/verification-state.js';
+import { projectFinalOutput } from './project-final-output.js';
+import { verificationOutputGuardrail } from '../guardrails/verification-output-guardrail.js';
 
 export function createProjectAgent<T, U = never>(
-  executor: (command: string) => Promise<T> | T,
+  executor: ProjectCheckExecutor<T>,
   model: string | Model = 'gpt-5.6-luna',
   implementation?: ImplementationCapability<U>,
 ) {

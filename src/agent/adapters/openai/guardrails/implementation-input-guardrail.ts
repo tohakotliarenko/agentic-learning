@@ -2,7 +2,8 @@ import {
   defineToolInputGuardrail,
   ToolGuardrailFunctionOutputFactory,
 } from '@openai/agents';
-import { checkImplementationContext, type ImplementationContext } from './workflow-policy.js';
+import { checkImplementationContext } from '../../../policies/workflow-policy.js';
+import type { ImplementationContext } from '../../../domain/implementation-context.js';
 
 export function createImplementationInputGuardrail(context: ImplementationContext) {
   return defineToolInputGuardrail({

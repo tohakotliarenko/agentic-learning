@@ -1,9 +1,11 @@
+import { createShellProjectCheckExecutor } from '../../src/agent/adapters/shell/project-check-executor.js';
 import { Agent, Runner } from '@openai/agents';
 import { ScriptedModel, assistantMessage, functionCall } from '@openai/agents/testing';
 import { describe, expect, it, vi } from 'vitest';
-import { createProjectCheckTool } from '../src/project-check-tool.js';
-import { createVerificationState } from '../src/verification-policy.js';
-import { checkImplementationContext, type ImplementationContext } from '../src/workflow-policy.js';
+import { createProjectCheckTool } from '../../src/agent/adapters/openai/tools/project-check-tool.js';
+import { createVerificationState } from '../../src/agent/domain/verification-state.js';
+import { checkImplementationContext } from '../../src/agent/policies/workflow-policy.js';
+import type { ImplementationContext } from '../../src/agent/domain/implementation-context.js';
 
 const ready: ImplementationContext = {
   hasActiveTask: true,
@@ -73,7 +75,7 @@ describe('implementation tool approval', () => {
     ]);
     const agent = new Agent({
       name: 'Capability test agent', model,
-      tools: [createProjectCheckTool(checkExecutor, {
+      tools: [createProjectCheckTool(createShellProjectCheckExecutor(checkExecutor), {
         context: {
           hasActiveTask: false, hasCurrentRequirements: false,
           ambiguitiesResolved: false, hasImplementationPlan: false,

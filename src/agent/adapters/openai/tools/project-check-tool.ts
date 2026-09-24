@@ -1,28 +1,14 @@
 import { tool, ToolGuardrailFunctionOutputFactory, type RunContext } from '@openai/agents';
 import { z } from 'zod';
-import { executeCommand } from './command-executor.js';
-import { projectOutputGuardrail } from './project-output-guardrail.js';
-import type { VerificationState } from './verification-policy.js';
-import type { ImplementationContext } from './workflow-policy.js';
-import { createImplementationInputGuardrail } from './implementation-input-guardrail.js';
-
-export const projectCommands = {
-  test: ['npm', ['test']],
-  lint: ['npm', ['run', 'lint']],
-  typecheck: ['npm', ['run', 'typecheck']],
-  git_status: ['git', ['status', '--short']],
-  git_diff: ['git', ['diff']],
-} as const;
-
-export type ProjectAction = keyof typeof projectCommands | 'implement';
-
-export interface ImplementationCapability<T> {
-  context: ImplementationContext;
-  executor: (task: string) => Promise<T> | T;
-}
+import { executeProjectCheck } from '../../../application/project-check.js';
+import type { ProjectAction } from '../../../domain/project-action.js';
+import type { VerificationState } from '../../../domain/verification-state.js';
+import type { ProjectCheckExecutor, ImplementationCapability } from '../../../ports/executors.js';
+import { projectOutputGuardrail } from '../guardrails/project-output-guardrail.js';
+import { createImplementationInputGuardrail } from '../guardrails/implementation-input-guardrail.js';
 
 export function createProjectCheckTool<T, U = never>(
-  executor: (command: string) => Promise<T> | T,
+  executor: ProjectCheckExecutor<T>,
   implementation?: ImplementationCapability<U>,
 ) {
   const actions: [ProjectAction, ...ProjectAction[]] = implementation
@@ -72,21 +58,7 @@ export function createProjectCheckTool<T, U = never>(
       if (!context) {
         throw new Error('Project checks require a verification run context.');
       }
-      const [program, args] = projectCommands[action];
-      const check = action === 'test' ? 'testsPassed'
-        : action === 'lint' ? 'lintPassed'
-        : action === 'typecheck' ? 'typecheckPassed' : undefined;
-      // Update around the actual executor, so a policy block records no attempt.
-      return executeCommand([program, ...args].join(' '), async (command) => {
-        try {
-          const result = await executor(command);
-          if (check) context.context[check] = 'passed';
-          return result;
-        } catch (error) {
-          if (check) context.context[check] = 'failed';
-          throw error;
-        }
-      });
+      return executeProjectCheck(action, context.context, executor);
     },
   });
 }

@@ -1,7 +1,8 @@
+import { createShellProjectCheckExecutor } from '../../src/agent/adapters/shell/project-check-executor.js';
 import { OutputGuardrailTripwireTriggered } from '@openai/agents';
 import { ScriptedModel, assistantMessage, functionCall } from '@openai/agents/testing';
 import { describe, expect, it, vi } from 'vitest';
-import { createProjectAgent, runProjectAgent } from '../src/project-agent-factory.js';
+import { createProjectAgent, runProjectAgent } from '../../src/agent/adapters/openai/agents/project-agent-factory.js';
 
 describe('project agent SDK integration', () => {
   it('runs a check with local context and accepts its confirmed claim', async () => {
@@ -15,7 +16,7 @@ describe('project agent SDK integration', () => {
     ]);
     const executor = vi.fn(async () => 'Tests passed');
 
-    const result = await runProjectAgent(createProjectAgent(executor, model), 'Check the project');
+    const result = await runProjectAgent(createProjectAgent(createShellProjectCheckExecutor(executor), model), 'Check the project');
 
     expect(result.finalOutput).toEqual(output);
     expect(executor).toHaveBeenCalledExactlyOnceWith('npm test');
@@ -31,7 +32,7 @@ describe('project agent SDK integration', () => {
     ]);
     const executor = vi.fn(async () => 'unused');
 
-    await expect(runProjectAgent(createProjectAgent(executor, model), 'Check the project'))
+    await expect(runProjectAgent(createProjectAgent(createShellProjectCheckExecutor(executor), model), 'Check the project'))
       .rejects.toBeInstanceOf(OutputGuardrailTripwireTriggered);
     expect(executor).not.toHaveBeenCalled();
     model.assertComplete();

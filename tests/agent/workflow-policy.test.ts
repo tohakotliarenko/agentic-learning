@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  checkImplementationContext,
-  type ImplementationContext,
-  type ImplementationPrerequisite,
-} from '../src/workflow-policy.js';
+import { checkImplementationContext } from '../../src/agent/policies/workflow-policy.js';
+import type { ImplementationContext, ImplementationPrerequisite } from '../../src/agent/domain/implementation-context.js';
 
 const completeContext: ImplementationContext = {
   hasActiveTask: true,

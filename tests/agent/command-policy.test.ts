@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkCommand } from '../src/command-policy.js';
+import { checkCommand } from '../../src/agent/policies/command-policy.js';
 
 describe('checkCommand', () => {
   it.each([

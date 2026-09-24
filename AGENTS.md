@@ -65,6 +65,10 @@ When requirements are incomplete but implementation can safely proceed without c
 
 ## Architecture
 
+Keep application code in `src/app/` and development-agent code in `src/agent/`, with corresponding tests in `tests/app/` and `tests/agent/`. Application code must not depend on the agent.
+
+Follow [docs/architecture.md](docs/architecture.md) for layer boundaries, dependency direction, execution flows, and where new code belongs.
+
 Respect the existing architecture and module boundaries.
 
 Before introducing a new architectural pattern:

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as commandExecutor from '../src/command-executor.js';
-import * as commandPolicy from '../src/command-policy.js';
-import { executeImplementationCommand } from '../src/implementation-executor.js';
-import type { ImplementationContext } from '../src/workflow-policy.js';
+import * as commandExecutor from '../../src/agent/application/command-executor.js';
+import * as commandPolicy from '../../src/agent/policies/command-policy.js';
+import { executeImplementationCommand } from '../../src/agent/application/implementation-executor.js';
+import type { ImplementationContext } from '../../src/agent/domain/implementation-context.js';
 
 const context: ImplementationContext = {
   hasActiveTask: true,

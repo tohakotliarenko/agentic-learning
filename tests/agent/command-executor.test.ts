@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { executeCommand } from '../src/command-executor.js';
+import { executeCommand } from '../../src/agent/application/command-executor.js';
 
 describe('executeCommand', () => {
   it.each(['git status', 'git diff', 'npm test', 'npm run lint', 'npm run typecheck'])(

@@ -1,16 +1,7 @@
 import type { OutputGuardrail } from '@openai/agents';
-import { z } from 'zod';
-import { unsupportedVerificationClaims, type VerificationState } from './verification-policy.js';
-
-export const projectFinalOutput = z.strictObject({
-  status: z.enum(['completed', 'blocked', 'needs_input']),
-  summary: z.string(),
-  verification: z.strictObject({
-    testsPassed: z.boolean(),
-    lintPassed: z.boolean(),
-    typecheckPassed: z.boolean(),
-  }),
-});
+import type { VerificationState } from '../../../domain/verification-state.js';
+import { unsupportedVerificationClaims } from '../../../policies/verification-policy.js';
+import { projectFinalOutput } from '../agents/project-final-output.js';
 
 export const verificationOutputGuardrail: OutputGuardrail<
   typeof projectFinalOutput, VerificationState

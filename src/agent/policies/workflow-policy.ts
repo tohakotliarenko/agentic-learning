@@ -1,11 +1,4 @@
-export interface ImplementationContext {
-  readonly hasActiveTask: boolean;
-  readonly hasCurrentRequirements: boolean;
-  readonly ambiguitiesResolved: boolean;
-  readonly hasImplementationPlan: boolean;
-}
-
-export type ImplementationPrerequisite = keyof ImplementationContext;
+import type { ImplementationContext, ImplementationPrerequisite } from '../domain/implementation-context.js';
 
 export type WorkflowPolicyResult =
   | { allowed: true }

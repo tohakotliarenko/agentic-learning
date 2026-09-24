@@ -1,13 +1,11 @@
-import { checkCommand } from './command-policy.js';
-
-export type CommandExecutionResult<T> =
-  | { status: 'blocked'; reason: string }
-  | { status: 'executed'; result: T };
+import type { CommandExecutionResult } from '../domain/command-execution-result.js';
+import type { CommandExecutor } from '../ports/executors.js';
+import { checkCommand } from '../policies/command-policy.js';
 
 // Enforces the existing lexical policy, including its documented limitations.
 export async function executeCommand<T>(
   command: string,
-  executor: (command: string) => Promise<T> | T,
+  executor: CommandExecutor<T>,
 ): Promise<CommandExecutionResult<T>> {
   const policy = checkCommand(command);
   if (!policy.allowed) {

@@ -184,3 +184,22 @@ identifiers, then create a fresh store, agent, Runner, and ScriptedModel. Both
 approve and reject paths read from temporary disk storage. Tests also verify
 preserved verification state, another interruption under the same runId, and
 malformed-state failures.
+
+## Long-lived task state
+
+TaskState is an SDK-independent requirements, plan, and approval snapshot. Explicit
+operations in application/task-state advance revisions without mutating the prior
+snapshot. policies/task-readiness-policy derives readiness from the current
+requirements, plan, and approval revisions. Updating requirements retains the old
+plan as outdated and clears approval; replacing a plan also clears approval.
+
+ports/task-store exposes save/load. FileTaskStore validates schema version 1 and
+writes one private JSON file per task using temporary-file replacement. Configure
+a directory outside source control. Tasks are retained independently of SDK run
+cleanup; there are no locks, migrations, or automatic issue synchronization.
+
+The application caller records human plan approval; the model receives no approval
+tool. Task readiness does not replace existing SDK tool-call approval and is not
+yet connected to an orchestrator or implementation executor. See
+[Task state implementation summary](task-state-implementation-summary.md) for the
+operations, validation rules, limitations, and verification coverage.

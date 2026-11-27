@@ -39,8 +39,8 @@ The following layer paths are relative to `src/agent/`.
   Policies may import domain; they do not execute commands or import SDK code.
 - **ports/**: executor callback contracts and implementation capability configuration.
   Contracts depend only on domain, not concrete adapters.
-- **application/**: SDK-independent orchestration through ports, including command
-  policy enforcement, workflow-first command execution, and verification updates.
+- **application/**: SDK-independent execution through ports, including command
+  policy enforcement and verification updates.
   It may import domain, policies, and ports. Project checks work with semantic
   actions, never npm/git mappings.
 - **adapters/shell/**: action-to-command mapping and actual execFile integration.
@@ -100,11 +100,6 @@ Implementation results also pass through the native sensitive-output guardrail
 and do not update verification state. Invalid input cannot reach an executor;
 SDK guardrails may still run for invalid input.
 
-A separate application/implementation-executor use case still checks workflow
-first and then delegates a raw command to executeCommand. It is not the SDK
-implement path and does not provide human approval. Both existing paths are
-intentionally retained.
-
 ## Running and testing
 
 Run the CLI with:
@@ -139,6 +134,11 @@ const result = await runtime.start(input);
 const resumed = await newRuntime.resume(runId, callId, { type: 'approve' });
 // Or: { type: 'reject', message: 'Implementation was rejected by the user' }
 ```
+
+This factory is exercised by the durable integration tests. The verification-only
+CLI calls runProjectAgent directly and always starts a fresh run; it does not yet
+select or restore a saved run. Durable start also creates a new run. Continuing
+an existing run requires an explicit resume call with its runId and callId.
 
 Lifecycle:
 
@@ -184,22 +184,3 @@ identifiers, then create a fresh store, agent, Runner, and ScriptedModel. Both
 approve and reject paths read from temporary disk storage. Tests also verify
 preserved verification state, another interruption under the same runId, and
 malformed-state failures.
-
-## Long-lived task state
-
-TaskState is an SDK-independent requirements, plan, and approval snapshot. Explicit
-operations in application/task-state advance revisions without mutating the prior
-snapshot. policies/task-readiness-policy derives readiness from the current
-requirements, plan, and approval revisions. Updating requirements retains the old
-plan as outdated and clears approval; replacing a plan also clears approval.
-
-ports/task-store exposes save/load. FileTaskStore validates schema version 1 and
-writes one private JSON file per task using temporary-file replacement. Configure
-a directory outside source control. Tasks are retained independently of SDK run
-cleanup; there are no locks, migrations, or automatic issue synchronization.
-
-The application caller records human plan approval; the model receives no approval
-tool. Task readiness does not replace existing SDK tool-call approval and is not
-yet connected to an orchestrator or implementation executor. See
-[Task state implementation summary](task-state-implementation-summary.md) for the
-operations, validation rules, limitations, and verification coverage.

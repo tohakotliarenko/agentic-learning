@@ -78,18 +78,6 @@ The function does not mutate input,
 infer or create missing state, or verify that the supplied facts are true.
 Table-driven tests live in `tests/agent/workflow-policy.test.ts`.
 
-`src/agent/application/implementation-executor.ts` exports the asynchronous
-`executeImplementationCommand(context, command, executor)` composition layer.
-It checks workflow prerequisites first. A blocked workflow returns
-`{ status: 'workflow-blocked', missingPrerequisites }` without evaluating command
-policy or calling the executor. Otherwise, it delegates to `executeCommand` and
-preserves its `{ status: 'blocked', reason }` or `{ status: 'executed', result }`
-result. Synchronous throws and asynchronous executor rejections propagate.
-
-This layer inherits the workflow policy's reliance on caller-supplied facts and
-the command policy's lexical limitations; it adds no security boundary or shell
-runner. Tests live in `tests/agent/implementation-executor.test.ts`.
-
 The project agent uses `createProjectCheckTool(createShellProjectCheckExecutor(executor))` from
 `src/agent/adapters/openai/tools/project-check-tool.ts`. Its `run_project_check` input accepts only an `action`:
 `test` → `npm test`, `lint` → `npm run lint`, `typecheck` → `npm run typecheck`,
